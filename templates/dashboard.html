@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_styles %}
+<style>
+.dashboard-top {
+    display: flex; align-items: flex-start; gap: 2rem;
+    margin-bottom: 2rem; flex-wrap: wrap;
+}
+.topic-pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--accent-light); color: var(--accent);
+    padding: 0.3rem 0.75rem; border-radius: 20px;
+    font-size: 0.8125rem; font-weight: 500;
+}
+
+/* DIGEST TRIGGER */
+.digest-panel {
+    background: white; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
+}
+.digest-panel-title { font-size: 1.0625rem; font-weight: 600; margin-bottom: 0.375rem; }
+.digest-panel-sub { font-size: 0.875rem; color: var(--ink-muted); margin-bottom: 1.25rem; }
+
+/* ARTICLE CARD */
+.article-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.article-row {
+    background: white; padding: 1.125rem 1.25rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    text-decoration: none; color: inherit;
+    transition: background 0.12s;
+}
+.article-row:hover { background: var(--paper-warm); }
+.article-row-top { display: flex; align-items: flex-start; gap: 0.75rem; }
+.article-title { font-size: 0.9375rem; font-weight: 600; line-height: 1.4; flex: 1; color: var(--ink); }
+.article-soul { font-size: 0.875rem; color: var(--ink-muted); line-height: 1.55; }
+.article-meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.article-meta-item { font-size: 0.8rem; color: var(--ink-faint); }
+.article-meta-item strong { color: var(--ink-muted); font-weight: 500; }
+
+/* STATUS STATES */
+.status-processing {
+    background: var(--warning-light);
+    border: 1px solid #d4c08a;
+    border-radius: var(--radius);
+    padding: 1.5rem; text-align: center;
+}
+.status-failed {
+    background: var(--danger-light);
+    border: 1px solid #d4aeae;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+}
+
+/* HISTORY */
+.digest-history { display: flex; flex-direction: column; gap: 0; }
+.history-item {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+    text-decoration: none; color: inherit; transition: color 0.12s;
+}
+.history-item:hover .history-title { color: var(--accent); }
+.history-item:last-child { border-bottom: none; }
+.history-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-ready { background: var(--success); }
+.dot-failed { background: var(--danger); }
+.dot-processing { background: var(--warning); }
+.history-title { font-size: 0.875rem; font-weight: 500; }
+.history-meta { font-size: 0.8125rem; color: var(--ink-faint); margin-left: auto; }
+
+/* STATS ROW */
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.125rem 1.25rem; }
+.stat-value { font-family: 'DM Serif Display', serif; font-size: 1.75rem; letter-spacing: -0.03em; color: var(--ink); }
+.stat-label { font-size: 0.8125rem; color: var(--ink-muted); margin-top: 0.125rem; }
+
+@media (max-width: 640px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <div>
+                <h1 class="page-title">Good to have you back, {{ current_user.name.split()[0] }}.</h1>
+                <div class="page-subtitle">
+                    {% if profile and profile.main_topic %}
+                    Tracking: <span class="topic-pill">{{ profile.main_topic }}</span>
+                    {% else %}
+                    Your research dashboard — <a href="{{ url_for('settings.research_profile') }}" style="color:var(--accent);">configure your topic to get started</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not profile or not profile.main_topic %}
+    <div class="alert alert-warning">
+        Your research profile is not configured yet. <a href="{{ url_for('settings.research_profile') }}" style="color:var(--warning);font-weight:600;">Set it up now</a> to start receiving daily insights.
+    </div>
+    {% endif %}
+
+    {% if not current_user.openai_api_key %}
+    <div class="alert alert-warning">
+        No OpenAI API key found. <a href="{{ url_for('settings.account') }}" style="color:var(--warning);font-weight:600;">Add your API key</a> to enable AI analysis.
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    {% set total_articles = current_user.articles|length %}
+    {% set total_digests = all_digests|length %}
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_articles }}</div>
+            <div class="stat-label">Papers analyzed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_digests }}</div>
+            <div class="stat-label">Digests generated</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ profile.articles_per_day if profile else 5 }}</div>
+            <div class="stat-label">Articles per digest</div>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start;">
+        <!-- LEFT: Main digest area -->
+        <div>
+            <!-- Trigger panel -->
+            <div class="digest-panel mb-2" style="margin-bottom:1.5rem;">
+                <div class="digest-panel-title">Today's Digest</div>
+                <div class="digest-panel-sub">Request a fresh analysis of recent papers and developments relevant to your research.</div>
+
+                {% if latest_digest and latest_digest.status == 'processing' %}
+                <div id="processing-banner" class="status-processing">
+                    <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:0.5rem;">
+                        <div class="spinner"></div>
+                        <strong style="font-size:0.9375rem;">Fetching and analyzing papers...</strong>
+                    </div>
+                    <div style="font-size:0.875rem;color:var(--warning);">This may take 1-3 minutes depending on the number of articles. The page will update automatically.</div>
+                </div>
+                <script>
+                (function() {
+                    var digestId = {{ latest_digest.id }};
+                    function poll() {
+                        fetch('/digest/' + digestId + '/status')
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status === 'ready' || data.status === 'failed') {
+                                window.location.reload();
+                            } else {
+                                setTimeout(poll, 3000);
+                            }
+                        }).catch(() => setTimeout(poll, 5000));
+                    }
+                    setTimeout(poll, 3000);
+                })();
+                </script>
+                {% else %}
+                <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                    <button id="start-digest-btn" class="btn btn-primary" onclick="startDigest()">
+                        Request digest
+                    </button>
+                    {% if latest_digest and latest_digest.status == 'ready' %}
+                    <span class="text-sm text-muted">Last run: {{ latest_digest.date_label }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Latest digest results -->
+            {% if latest_digest and latest_digest.status == 'failed' %}
+            <div class="status-failed">
+                <div style="font-weight:600;margin-bottom:0.375rem;color:var(--danger);">Digest failed</div>
+                <div style="font-size:0.875rem;color:var(--ink-muted);">{{ latest_digest.error_message }}</div>
+            </div>
+
+            {% elif latest_digest and latest_digest.status == 'ready' and articles %}
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
+                <div>
+                    <span class="section-label">Latest digest</span>
+                    <div style="font-weight:600;font-size:0.9375rem;">{{ latest_digest.date_label }}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    {% if latest_digest.regenerated %}
+                    <span class="badge badge-amber">Regenerated</span>
+                    {% else %}
+                    <span class="badge badge-green">{{ latest_digest.new_articles_count }} new</span>
+                    {% endif %}
+                    <a href="{{ url_for('dashboard.view_digest', digest_id=latest_digest.id) }}" class="btn btn-secondary btn-sm">Full digest</a>
+                </div>
+            </div>
+            <div class="article-list">
+                {% for article in articles[:6] %}
+                <a href="{{ url_for('dashboard.view_article', article_id=article.id) }}" class="article-row">
+                    <div class="article-row-top">
+                        <div class="article-title">{{ article.title }}</div>
+                        <div style="flex-shrink:0;display:flex;align-items:center;gap:0.5rem;">
+                            <div class="score-bar-wrap" style="width:80px;">
+                                <div class="score-bar">
+                                    <div class="score-bar-fill" style="width:{{ (article.relevance_score * 100)|int }}%"></div>
+                                </div>
+                                <span class="score-label">{{ "%.0f"|format(article.relevance_score * 100) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% if article.summary_soul %}
+                    <div class="article-soul">{{ article.summary_soul[:200] }}</div>
+                    {% endif %}
+                    <div class="article-meta">
+                        <span class="article-meta-item"><strong>Source:</strong> {{ article.source_platform }}</span>
+                        {% if article.published_date %}
+                        <span class="article-meta-item"><strong>Published:</strong> {{ article.published_date }}</span>
+                        {% endif %}
+                        {% if article.is_blog_post %}
+                        <span class="badge badge-gray">Blog</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% if articles|length > 6 %}
+            <div style="text-align:center;margin-top:1rem;">
+                <a href="{{ url_for('dashboard.view_digest', digest_id=latest_digest.id) }}" class="btn btn-ghost btn-sm">
+                    View all {{ articles|length }} articles in this digest
+                </a>
+            </div>
+            {% endif %}
+
+            {% elif not latest_digest or latest_digest.status == 'ready' %}
+            <div class="empty-state">
+                <div class="empty-state-title">No digest yet</div>
+                <div class="empty-state-text">Click "Request digest" above to fetch and analyze the latest papers matching your research profile.</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- RIGHT: History sidebar -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="section-label" style="margin-bottom:0;">Digest History</div>
+                </div>
+                <div class="card-body" style="padding:1rem 1.25rem;">
+                    {% if all_digests %}
+                    <div class="digest-history">
+                        {% for digest in all_digests %}
+                        <a href="{{ url_for('dashboard.view_digest', digest_id=digest.id) }}" class="history-item">
+                            <div class="history-dot dot-{{ digest.status }}"></div>
+                            <div>
+                                <div class="history-title">{{ digest.date_label or 'Digest' }}</div>
+                                <div style="font-size:0.8rem;color:var(--ink-faint);">
+                                    {{ digest.total_articles }} article{{ 's' if digest.total_articles != 1 else '' }}
+                                    {% if digest.regenerated %} — Regen{% endif %}
+                                </div>
+                            </div>
+                            <div class="history-meta">
+                                <span class="badge badge-{{ 'green' if digest.status == 'ready' else 'amber' if digest.status == 'processing' else 'gray' }}">
+                                    {{ digest.status }}
+                                </span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="font-size:0.875rem;color:var(--ink-faint);text-align:center;padding:1rem 0;">No history yet</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if profile and profile.main_topic %}
+            <div class="card mt-2" style="margin-top:1rem;">
+                <div class="card-body" style="padding:1rem 1.25rem;">
+                    <div class="section-label">Research Profile</div>
+                    <div style="font-size:0.875rem;font-weight:600;margin-bottom:0.5rem;">{{ profile.main_topic }}</div>
+                    {% if profile.keywords %}
+                    <div style="font-size:0.8125rem;color:var(--ink-muted);margin-bottom:0.5rem;">
+                        <span style="color:var(--ink-faint);">Keywords:</span> {{ profile.keywords }}
+                    </div>
+                    {% endif %}
+                    {% if profile.focus_areas %}
+                    <div style="font-size:0.8125rem;color:var(--ink-muted);">
+                        <span style="color:var(--ink-faint);">Focus:</span> {{ profile.focus_areas }}
+                    </div>
+                    {% endif %}
+                    <div style="margin-top:0.875rem;">
+                        <a href="{{ url_for('settings.research_profile') }}" class="btn btn-ghost btn-sm" style="padding-left:0;">Edit profile</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function startDigest() {
+    var btn = document.getElementById('start-digest-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Starting...';
+
+    fetch('/digest/start', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'started' || data.status === 'already_processing') {
+            window.location.reload();
+        } else {
+            alert(data.message || 'An error occurred. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = 'Request digest';
+        }
+    })
+    .catch(err => {
+        alert('Failed to start digest. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = 'Request digest';
+    });
+}
+</script>
+{% endblock %}

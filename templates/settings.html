@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Research Profile{% endblock %}
+
+{% block extra_styles %}
+<style>
+.settings-layout { display: grid; grid-template-columns: 200px 1fr; gap: 2rem; align-items: start; }
+.settings-nav { position: sticky; top: 72px; }
+.settings-nav-item {
+    display: block; padding: 0.5rem 0.75rem; border-radius: var(--radius);
+    font-size: 0.875rem; font-weight: 500; color: var(--ink-muted);
+    text-decoration: none; transition: all 0.12s; margin-bottom: 0.125rem;
+}
+.settings-nav-item:hover { color: var(--ink); background: var(--paper-mid); }
+.settings-nav-item.active { color: var(--accent); background: var(--accent-light); }
+.settings-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+.settings-section:last-child { border-bottom: none; margin-bottom: 0; }
+.settings-section-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+.settings-section-desc { font-size: 0.875rem; color: var(--ink-muted); margin-bottom: 1.25rem; }
+.checkbox-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+@media (max-width: 768px) {
+    .settings-layout { grid-template-columns: 1fr; }
+    .settings-nav { position: static; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .checkbox-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <h1 class="page-title">Settings</h1>
+        <div class="page-subtitle">Configure your research profile, platforms, and preferences.</div>
+    </div>
+
+    <div class="settings-layout">
+        <nav class="settings-nav">
+            <a href="{{ url_for('settings.research_profile') }}" class="settings-nav-item active">Research Profile</a>
+            <a href="{{ url_for('settings.account') }}" class="settings-nav-item">Account</a>
+        </nav>
+
+        <div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            <form method="POST">
+                <!-- Research Topic -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Research Topic</div>
+                    <div class="settings-section-desc">Define your research area. The more specific you are, the more targeted the results.</div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="main_topic">Main topic <span style="color:var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="main_topic" name="main_topic"
+                               value="{{ profile.main_topic }}"
+                               placeholder="e.g., Large Language Models for Medical Question Answering">
+                        <div class="form-hint">Your primary research area. Keep it specific but not too narrow.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="keywords">Keywords <span class="form-label-hint">comma-separated</span></label>
+                        <input type="text" class="form-control" id="keywords" name="keywords"
+                               value="{{ profile.keywords }}"
+                               placeholder="e.g., transformer, BERT, clinical NLP, EHR">
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="must_include">Must include <span class="form-label-hint">comma-separated</span></label>
+                            <input type="text" class="form-control" id="must_include" name="must_include"
+                                   value="{{ profile.must_include }}"
+                                   placeholder="e.g., evaluation, benchmark">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="exclude_terms">Exclude terms <span class="form-label-hint">comma-separated</span></label>
+                            <input type="text" class="form-control" id="exclude_terms" name="exclude_terms"
+                                   value="{{ profile.exclude_terms }}"
+                                   placeholder="e.g., survey, review">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="focus_areas">Focus areas <span class="form-label-hint">what specific aspects interest you most</span></label>
+                        <textarea class="form-control" id="focus_areas" name="focus_areas"
+                                  placeholder="e.g., model interpretability, dataset construction, few-shot learning, comparative evaluation">{{ profile.focus_areas }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Platforms -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Data Sources</div>
+                    <div class="settings-section-desc">Select which academic databases to search. Multiple sources are recommended.</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Academic databases</label>
+                        <div class="checkbox-grid">
+                            {% set active_platforms = profile.get_platforms() %}
+                            {% for value, label in platform_options %}
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" name="platforms" value="{{ value }}"
+                                       {% if value in active_platforms %}checked{% endif %}>
+                                <span class="form-check-label">{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="max-width:200px;">
+                        <label class="form-label" for="articles_per_day">Articles per digest</label>
+                        <input type="number" class="form-control" id="articles_per_day" name="articles_per_day"
+                               value="{{ profile.articles_per_day }}" min="1" max="20">
+                        <div class="form-hint">Between 1 and 20. More articles means longer processing time.</div>
+                    </div>
+                </div>
+
+                <!-- Blogs -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Research Blogs</div>
+                    <div class="settings-section-desc">Include posts from curated research blogs alongside academic papers.</div>
+
+                    <div class="form-group">
+                        <label class="form-check" style="margin-bottom:0.875rem;">
+                            <input type="checkbox" class="form-check-input" name="include_blogs" id="include_blogs"
+                                   {% if profile.include_blogs %}checked{% endif %}>
+                            <span class="form-check-label fw-500">Include blog posts in digests</span>
+                        </label>
+                    </div>
+
+                    <div id="blog-options">
+                        <label class="form-label">Select blogs to follow</label>
+                        <div class="checkbox-grid">
+                            {% set active_blogs = profile.get_selected_blogs() %}
+                            {% for value, label in blog_options %}
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input" name="blogs" value="{{ value }}"
+                                       {% if value in active_blogs %}checked{% endif %}>
+                                <span class="form-check-label">{{ label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1rem;">
+                    <button type="submit" class="btn btn-primary">Save profile</button>
+                    <a href="{{ url_for('dashboard.home') }}" class="btn btn-ghost">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var blogCheck = document.getElementById('include_blogs');
+var blogOptions = document.getElementById('blog-options');
+
+function toggleBlogs() {
+    blogOptions.style.opacity = blogCheck.checked ? '1' : '0.4';
+    blogOptions.querySelectorAll('input').forEach(i => i.disabled = !blogCheck.checked);
+}
+
+blogCheck.addEventListener('change', toggleBlogs);
+toggleBlogs();
+</script>
+{% endblock %}

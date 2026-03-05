@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title[:60] }}{% endblock %}
+
+{% block extra_styles %}
+<style>
+.article-header { margin-bottom: 2rem; }
+.article-main-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.625rem; letter-spacing: -0.03em;
+    line-height: 1.25; margin-bottom: 1rem; color: var(--ink);
+}
+.article-byline { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+.view-toggle {
+    display: inline-flex; border: 1px solid var(--border-strong);
+    border-radius: var(--radius); overflow: hidden; background: white;
+}
+.view-toggle-btn {
+    padding: 0.4rem 1rem; font-size: 0.875rem; font-weight: 500;
+    border: none; background: transparent; cursor: pointer;
+    color: var(--ink-muted); transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+}
+.view-toggle-btn.active { background: var(--accent); color: white; }
+.view-toggle-btn:not(.active):hover { background: var(--paper-mid); color: var(--ink); }
+
+.insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+@media (max-width: 640px) { .insight-row { grid-template-columns: 1fr; } }
+
+.insight-item {
+    background: white; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.125rem;
+}
+.insight-item-label {
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent-muted); margin-bottom: 0.5rem;
+}
+.insight-item-value { font-size: 0.9rem; line-height: 1.6; color: var(--ink); }
+
+.soul-block {
+    background: linear-gradient(135deg, var(--accent-light) 0%, var(--paper-warm) 100%);
+    border: 1px solid #c5d5e8;
+    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.soul-block-label {
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem;
+}
+.soul-text { font-size: 0.9375rem; line-height: 1.7; color: var(--ink); font-style: italic; }
+
+.detail-section { margin-bottom: 1.75rem; }
+.detail-section-title {
+    font-size: 0.875rem; font-weight: 600; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--ink-muted);
+    margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.detail-text { font-size: 0.9375rem; line-height: 1.7; color: var(--ink); }
+.detail-text p { margin-bottom: 0.75rem; }
+
+.writeup-block {
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.25rem 1.5rem;
+    font-size: 0.9375rem; line-height: 1.7;
+    position: relative;
+}
+.writeup-copy-btn {
+    position: absolute; top: 0.75rem; right: 0.75rem;
+    font-size: 0.8rem; padding: 0.25rem 0.625rem;
+}
+
+.back-nav { margin-bottom: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="back-nav">
+        <a href="javascript:history.back()" class="btn btn-ghost btn-sm" style="padding-left:0;">
+            &larr; Back
+        </a>
+    </div>
+
+    <div class="article-header">
+        <h1 class="article-main-title">{{ article.title }}</h1>
+        <div class="article-byline">
+            {% if article.authors %}
+            <span class="text-sm text-muted">{{ article.authors }}</span>
+            <span style="color:var(--border-strong);">|</span>
+            {% endif %}
+            <span class="badge badge-blue">{{ article.source_platform }}</span>
+            {% if article.published_date %}
+            <span class="text-xs text-faint">{{ article.published_date }}</span>
+            {% endif %}
+            {% if article.is_blog_post %}
+            <span class="badge badge-gray">Blog post</span>
+            {% endif %}
+            <div class="score-bar-wrap" style="width:100px;">
+                <div class="score-bar"><div class="score-bar-fill" style="width:{{ (article.relevance_score * 100)|int }}%"></div></div>
+                <span class="score-label">{{ "%.0f"|format(article.relevance_score * 100) }}% relevant</span>
+            </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <div class="view-toggle">
+                <button class="view-toggle-btn {% if view_mode == 'summary' %}active{% endif %}" onclick="setView('summary')">Summary</button>
+                <button class="view-toggle-btn {% if view_mode == 'detail' %}active{% endif %}" onclick="setView('detail')">Detailed</button>
+            </div>
+            {% if article.url %}
+            <a href="{{ article.url }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">
+                Read original &rarr;
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SUMMARY VIEW -->
+    <div id="view-summary" {% if view_mode != 'summary' %}style="display:none;"{% endif %}>
+
+        {% if article.summary_soul %}
+        <div class="soul-block">
+            <div class="soul-block-label">In Three Lines</div>
+            <div class="soul-text">{{ article.summary_soul }}</div>
+        </div>
+        {% endif %}
+
+        <div class="insight-row">
+            {% if article.summary_highlights %}
+            <div class="insight-item">
+                <div class="insight-item-label">Novelty and Main Contributions</div>
+                <div class="insight-item-value">{{ article.summary_highlights }}</div>
+            </div>
+            {% endif %}
+            {% if article.summary_methodology %}
+            <div class="insight-item">
+                <div class="insight-item-label">Methodology</div>
+                <div class="insight-item-value">{{ article.summary_methodology }}</div>
+            </div>
+            {% endif %}
+            {% if article.summary_results %}
+            <div class="insight-item">
+                <div class="insight-item-label">Results</div>
+                <div class="insight-item-value">{{ article.summary_results }}</div>
+            </div>
+            {% endif %}
+            {% if article.summary_datasets and article.summary_datasets != 'Not specified' %}
+            <div class="insight-item">
+                <div class="insight-item-label">Datasets</div>
+                <div class="insight-item-value">{{ article.summary_datasets }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if article.summary_models and article.summary_models not in ['Not applicable', 'Not specified'] %}
+        <div class="insight-item" style="margin-bottom:1rem;">
+            <div class="insight-item-label">Models and Algorithms</div>
+            <div class="insight-item-value">{{ article.summary_models }}</div>
+        </div>
+        {% endif %}
+
+        {% if article.abstract %}
+        <hr class="divider">
+        <div class="detail-section">
+            <div class="detail-section-title">Abstract</div>
+            <div class="detail-text">{{ article.abstract }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- DETAIL VIEW -->
+    <div id="view-detail" {% if view_mode != 'detail' %}style="display:none;"{% endif %}>
+
+        {% if article.detail_approach %}
+        <div class="detail-section">
+            <div class="detail-section-title">Approach — Key Steps</div>
+            <div class="detail-text">{{ article.detail_approach | replace('\n', '<br>') | safe }}</div>
+        </div>
+        {% endif %}
+
+        {% if article.detail_methodology %}
+        <div class="detail-section">
+            <div class="detail-section-title">Detailed Methodology</div>
+            <div class="insight-block">{{ article.detail_methodology }}</div>
+        </div>
+        {% endif %}
+
+        {% if article.detail_results %}
+        <div class="detail-section">
+            <div class="detail-section-title">Results and Findings</div>
+            <div class="detail-text">{{ article.detail_results }}</div>
+        </div>
+        {% endif %}
+
+        {% if article.detail_figures %}
+        <div class="detail-section">
+            <div class="detail-section-title">Figures Worth Reviewing</div>
+            <div class="detail-text text-muted">{{ article.detail_figures }}</div>
+        </div>
+        {% endif %}
+
+        {% if article.detail_writeup_summary %}
+        <div class="detail-section">
+            <div class="detail-section-title">Literature Review Summary</div>
+            <div class="writeup-block">
+                <button class="btn btn-secondary writeup-copy-btn" onclick="copyWriteup()">Copy</button>
+                <div id="writeup-text">{{ article.detail_writeup_summary }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setView(mode) {
+    document.getElementById('view-summary').style.display = mode === 'summary' ? 'block' : 'none';
+    document.getElementById('view-detail').style.display = mode === 'detail' ? 'block' : 'none';
+    document.querySelectorAll('.view-toggle-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', (i === 0 && mode === 'summary') || (i === 1 && mode === 'detail'));
+    });
+    history.replaceState(null, '', '?view=' + mode);
+}
+
+function copyWriteup() {
+    var text = document.getElementById('writeup-text').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        var btn = document.querySelector('.writeup-copy-btn');
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+}
+</script>
+{% endblock %}

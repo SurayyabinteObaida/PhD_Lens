@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PhDLens{% endblock %} — Research Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --ink: #1a1a1a;
+            --ink-muted: #5a5a5a;
+            --ink-faint: #9a9a9a;
+            --paper: #faf9f7;
+            --paper-warm: #f4f2ee;
+            --paper-mid: #ece9e3;
+            --border: #e0dcd4;
+            --border-strong: #c8c4bc;
+            --accent: #4a6fa5;
+            --accent-light: #e8eef5;
+            --accent-muted: #7a9bc4;
+            --success: #3a7a5a;
+            --success-light: #e6f2ec;
+            --warning: #8a6a2a;
+            --warning-light: #f5eed9;
+            --danger: #8a3a3a;
+            --danger-light: #f5e8e8;
+            --radius: 6px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 20px rgba(0,0,0,0.10);
+        }
+
+        html { font-size: 16px; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* NAV */
+        .nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(250,249,247,0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex; align-items: center; gap: 2rem;
+            height: 56px;
+        }
+        .nav-brand {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.25rem; color: var(--ink);
+            text-decoration: none; letter-spacing: -0.02em;
+        }
+        .nav-brand span { color: var(--accent); }
+        .nav-links { display: flex; gap: 0.25rem; margin-left: 0.5rem; }
+        .nav-link {
+            font-size: 0.875rem; font-weight: 500; color: var(--ink-muted);
+            text-decoration: none; padding: 0.375rem 0.75rem;
+            border-radius: var(--radius); transition: all 0.15s;
+        }
+        .nav-link:hover { color: var(--ink); background: var(--paper-mid); }
+        .nav-link.active { color: var(--accent); background: var(--accent-light); }
+        .nav-right { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
+        .nav-user { font-size: 0.8125rem; color: var(--ink-muted); }
+        .nav-user strong { color: var(--ink); font-weight: 600; }
+
+        /* MAIN LAYOUT */
+        .page-wrapper { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .page-header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+        .page-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.75rem; letter-spacing: -0.03em; color: var(--ink);
+        }
+        .page-subtitle { font-size: 0.9375rem; color: var(--ink-muted); margin-top: 0.25rem; }
+
+        /* CARDS */
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+        .card-body { padding: 1.5rem; }
+        .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+        .card-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); background: var(--paper); border-radius: 0 0 var(--radius) var(--radius); }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1.125rem; font-size: 0.875rem; font-weight: 500;
+            border: 1px solid transparent; border-radius: var(--radius);
+            cursor: pointer; text-decoration: none; transition: all 0.15s;
+            font-family: 'DM Sans', sans-serif; line-height: 1.4;
+        }
+        .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+        .btn-primary:hover { background: #3d5f8f; border-color: #3d5f8f; }
+        .btn-secondary { background: white; color: var(--ink); border-color: var(--border-strong); }
+        .btn-secondary:hover { background: var(--paper-warm); }
+        .btn-ghost { background: transparent; color: var(--ink-muted); border-color: transparent; }
+        .btn-ghost:hover { background: var(--paper-mid); color: var(--ink); }
+        .btn-danger { background: white; color: var(--danger); border-color: #d4aeae; }
+        .btn-danger:hover { background: var(--danger-light); }
+        .btn-lg { padding: 0.6875rem 1.5rem; font-size: 0.9375rem; }
+        .btn-sm { padding: 0.3125rem 0.75rem; font-size: 0.8125rem; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* FORMS */
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--ink); margin-bottom: 0.4rem; }
+        .form-label-hint { font-size: 0.8125rem; color: var(--ink-faint); font-weight: 400; margin-left: 0.5rem; }
+        .form-control {
+            width: 100%; padding: 0.5rem 0.75rem; font-size: 0.875rem;
+            font-family: 'DM Sans', sans-serif; color: var(--ink);
+            background: white; border: 1px solid var(--border-strong);
+            border-radius: var(--radius); transition: border-color 0.15s, box-shadow 0.15s;
+            line-height: 1.5;
+        }
+        .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,111,165,0.12); }
+        .form-control::placeholder { color: var(--ink-faint); }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+        .form-hint { font-size: 0.8125rem; color: var(--ink-faint); margin-top: 0.3rem; }
+        .form-check { display: flex; align-items: center; gap: 0.5rem; }
+        .form-check-input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+        .form-check-label { font-size: 0.875rem; cursor: pointer; }
+
+        /* ALERTS / FLASH */
+        .alert {
+            padding: 0.75rem 1rem; border-radius: var(--radius);
+            font-size: 0.875rem; margin-bottom: 1rem;
+            border: 1px solid transparent;
+        }
+        .alert-success { background: var(--success-light); color: #2a5a40; border-color: #b8d9c8; }
+        .alert-error, .alert-danger { background: var(--danger-light); color: #6a2a2a; border-color: #d4aeae; }
+        .alert-info { background: var(--accent-light); color: #2a4060; border-color: #b8ccdf; }
+        .alert-warning { background: var(--warning-light); color: #6a4a1a; border-color: #d4c08a; }
+
+        /* BADGES */
+        .badge {
+            display: inline-block; padding: 0.2em 0.55em;
+            font-size: 0.75rem; font-weight: 600; border-radius: 4px;
+            font-family: 'DM Mono', monospace; letter-spacing: 0.02em;
+        }
+        .badge-blue { background: var(--accent-light); color: var(--accent); }
+        .badge-green { background: var(--success-light); color: var(--success); }
+        .badge-amber { background: var(--warning-light); color: var(--warning); }
+        .badge-gray { background: var(--paper-mid); color: var(--ink-muted); }
+
+        /* DIVIDERS */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+        /* GRID */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+        }
+
+        /* TEXT UTILS */
+        .text-muted { color: var(--ink-muted); }
+        .text-faint { color: var(--ink-faint); }
+        .text-accent { color: var(--accent); }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.8125rem; }
+        .mono { font-family: 'DM Mono', monospace; }
+        .serif { font-family: 'DM Serif Display', serif; }
+        .fw-500 { font-weight: 500; }
+        .fw-600 { font-weight: 600; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .d-flex { display: flex; }
+        .align-center { align-items: center; }
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .ml-auto { margin-left: auto; }
+
+        /* SPINNER */
+        .spinner {
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* SCORE BAR */
+        .score-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+        .score-bar { height: 4px; background: var(--paper-mid); border-radius: 2px; flex: 1; overflow: hidden; }
+        .score-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+        .score-label { font-size: 0.75rem; font-family: 'DM Mono', monospace; color: var(--ink-muted); min-width: 36px; }
+
+        /* SECTION LABELS */
+        .section-label {
+            font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--ink-faint);
+            margin-bottom: 0.5rem;
+        }
+
+        /* INSIGHT BLOCK */
+        .insight-block {
+            padding: 1rem 1.25rem;
+            background: var(--paper-warm);
+            border-left: 3px solid var(--accent-muted);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            font-size: 0.9rem; line-height: 1.65;
+            margin-bottom: 1rem;
+        }
+        .insight-block p { margin-bottom: 0.5rem; }
+        .insight-block p:last-child { margin-bottom: 0; }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center; padding: 4rem 2rem;
+            color: var(--ink-muted);
+        }
+        .empty-state-title { font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--ink); }
+        .empty-state-text { font-size: 0.9rem; max-width: 380px; margin: 0 auto 1.5rem; }
+    </style>
+    {% block extra_styles %}{% endblock %}
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<nav class="nav">
+    <a href="{{ url_for('dashboard.home') }}" class="nav-brand">PhD<span>Lens</span></a>
+    <div class="nav-links">
+        <a href="{{ url_for('dashboard.home') }}" class="nav-link {% if request.endpoint == 'dashboard.home' %}active{% endif %}">Dashboard</a>
+        <a href="{{ url_for('articles.library') }}" class="nav-link {% if request.endpoint == 'articles.library' %}active{% endif %}">Library</a>
+        <a href="{{ url_for('settings.research_profile') }}" class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}">Settings</a>
+    </div>
+    <div class="nav-right">
+        <span class="nav-user">Signed in as <strong>{{ current_user.name }}</strong></span>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Sign out</a>
+    </div>
+</nav>
+{% endif %}
+
+{% block flashes %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div style="max-width:1100px;margin:1rem auto 0;padding:0 1.5rem;">
+{% for category, message in messages %}
+<div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+<script>
+function getCsrfToken() {
+    // No CSRF for JSON endpoints in this app (stateless API calls)
+    return '';
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

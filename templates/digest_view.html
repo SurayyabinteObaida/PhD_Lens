@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Digest — {{ digest.date_label }}{% endblock %}
+
+{% block extra_styles %}
+<style>
+.digest-hero {
+    background: white; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.digest-stat { text-align: center; padding: 0 1.25rem; border-right: 1px solid var(--border); }
+.digest-stat:last-child { border-right: none; }
+.digest-stat-value { font-family: 'DM Serif Display', serif; font-size: 2rem; letter-spacing: -0.04em; }
+.digest-stat-label { font-size: 0.8rem; color: var(--ink-muted); }
+
+.article-grid { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.article-card {
+    background: white; padding: 1.25rem 1.5rem;
+    text-decoration: none; color: inherit;
+    transition: background 0.12s;
+    display: block;
+}
+.article-card:hover { background: var(--paper-warm); }
+.article-card-title { font-size: 0.9375rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.5rem; color: var(--ink); }
+.article-card-soul { font-size: 0.875rem; color: var(--ink-muted); line-height: 1.55; margin-bottom: 0.75rem; }
+.article-card-footer { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="back-nav" style="margin-bottom:1rem;">
+        <a href="{{ url_for('dashboard.home') }}" class="btn btn-ghost btn-sm" style="padding-left:0;">&larr; Dashboard</a>
+    </div>
+
+    <div class="page-header">
+        <h1 class="page-title">{{ digest.date_label }}</h1>
+        <div class="page-subtitle">
+            {% if digest.regenerated %}
+            Re-analyzed existing articles — no new papers matched your profile today.
+            {% else %}
+            {{ digest.new_articles_count }} new article{{ 's' if digest.new_articles_count != 1 else '' }} found and analyzed.
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="digest-hero">
+        <div class="digest-stat">
+            <div class="digest-stat-value">{{ digest.total_articles }}</div>
+            <div class="digest-stat-label">Articles</div>
+        </div>
+        <div class="digest-stat">
+            <div class="digest-stat-value">{{ digest.new_articles_count }}</div>
+            <div class="digest-stat-label">New papers</div>
+        </div>
+        <div class="digest-stat">
+            <div class="digest-stat-value">{{ digest.status|capitalize }}</div>
+            <div class="digest-stat-label">Status</div>
+        </div>
+        {% if digest.regenerated %}
+        <div style="margin-left:auto;">
+            <span class="badge badge-amber">Regenerated from existing library</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if articles %}
+    <div class="article-grid">
+        {% for article in articles %}
+        <a href="{{ url_for('dashboard.view_article', article_id=article.id) }}" class="article-card">
+            <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+                <div style="flex:1;">
+                    <div class="article-card-title">{{ article.title }}</div>
+                    {% if article.summary_soul %}
+                    <div class="article-card-soul">{{ article.summary_soul }}</div>
+                    {% elif article.abstract %}
+                    <div class="article-card-soul">{{ article.abstract[:200] }}...</div>
+                    {% endif %}
+                </div>
+                <div style="flex-shrink:0;text-align:right;">
+                    <div class="score-bar-wrap" style="justify-content:flex-end;">
+                        <div class="score-bar" style="width:60px;"><div class="score-bar-fill" style="width:{{ (article.relevance_score * 100)|int }}%"></div></div>
+                        <span class="score-label">{{ "%.0f"|format(article.relevance_score * 100) }}%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="article-card-footer">
+                <span class="badge badge-blue">{{ article.source_platform }}</span>
+                {% if article.published_date %}
+                <span class="text-xs text-faint">{{ article.published_date }}</span>
+                {% endif %}
+                {% if article.authors %}
+                <span class="text-xs text-faint">{{ article.authors[:80] }}{% if article.authors|length > 80 %}...{% endif %}</span>
+                {% endif %}
+                {% if article.is_blog_post %}
+                <span class="badge badge-gray">Blog</span>
+                {% endif %}
+                <span class="btn btn-ghost btn-sm" style="margin-left:auto;padding-right:0;">View insights &rarr;</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-title">No articles in this digest</div>
+        <div class="empty-state-text">This digest completed but found no analyzable articles.</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

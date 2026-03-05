@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Account Settings{% endblock %}
+
+{% block extra_styles %}
+<style>
+.settings-layout { display: grid; grid-template-columns: 200px 1fr; gap: 2rem; align-items: start; }
+.settings-nav { position: sticky; top: 72px; }
+.settings-nav-item {
+    display: block; padding: 0.5rem 0.75rem; border-radius: var(--radius);
+    font-size: 0.875rem; font-weight: 500; color: var(--ink-muted);
+    text-decoration: none; transition: all 0.12s; margin-bottom: 0.125rem;
+}
+.settings-nav-item:hover { color: var(--ink); background: var(--paper-mid); }
+.settings-nav-item.active { color: var(--accent); background: var(--accent-light); }
+.settings-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+.settings-section:last-child { border-bottom: none; margin-bottom: 0; }
+.settings-section-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+.settings-section-desc { font-size: 0.875rem; color: var(--ink-muted); margin-bottom: 1.25rem; }
+@media (max-width: 768px) {
+    .settings-layout { grid-template-columns: 1fr; }
+    .settings-nav { position: static; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <h1 class="page-title">Settings</h1>
+        <div class="page-subtitle">Manage your account and API credentials.</div>
+    </div>
+
+    <div class="settings-layout">
+        <nav class="settings-nav">
+            <a href="{{ url_for('settings.research_profile') }}" class="settings-nav-item">Research Profile</a>
+            <a href="{{ url_for('settings.account') }}" class="settings-nav-item active">Account</a>
+        </nav>
+
+        <div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'error' if category == 'error' else category }}">{{ message }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="settings-section">
+                    <div class="settings-section-title">Profile Information</div>
+                    <div class="form-group" style="max-width:400px;">
+                        <label class="form-label" for="name">Display name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ current_user.name }}">
+                    </div>
+                    <div class="form-group" style="max-width:400px;">
+                        <label class="form-label">Email address</label>
+                        <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                        <div class="form-hint">Email cannot be changed.</div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">OpenAI API Key</div>
+                    <div class="settings-section-desc">Required for AI-powered article analysis. Your key is stored securely and never shared.</div>
+                    <div class="form-group" style="max-width:480px;">
+                        <label class="form-label" for="openai_api_key">API Key</label>
+                        <input type="password" class="form-control" id="openai_api_key" name="openai_api_key"
+                               placeholder="{% if current_user.openai_api_key %}sk-...{{ current_user.openai_api_key[-6:] if current_user.openai_api_key else '' }} (set){% else %}sk-...{% endif %}">
+                        <div class="form-hint">
+                            {% if current_user.openai_api_key %}
+                            A key is currently set. Enter a new one to replace it, or leave blank to keep the existing one.
+                            {% else %}
+                            No key set. Visit <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" style="color:var(--accent);">platform.openai.com</a> to get your key.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">Change Password</div>
+                    <div class="settings-section-desc">Leave blank if you do not wish to change your password.</div>
+                    <div class="form-group" style="max-width:400px;">
+                        <label class="form-label" for="current_password">Current password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password">
+                    </div>
+                    <div class="grid-2" style="max-width:600px;">
+                        <div class="form-group">
+                            <label class="form-label" for="new_password">New password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" minlength="8">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="confirm_password">Confirm new password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1rem;">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <a href="{{ url_for('dashboard.home') }}" class="btn btn-ghost">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
