@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block title %}PhDLens — Research Intelligence{% endblock %}
+{% block content %}
+<style>
+/* LANDING PAGE */
+.lp-wrap {
+    min-height: calc(100vh - 56px);
+    display: flex; flex-direction: column;
+}
+
+/* HERO */
+.lp-hero {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5rem 1.5rem 4rem;
+    align-items: center;
+}
+.lp-hero-left { padding-right: 4rem; }
+.lp-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent);
+    background: var(--accent-light); padding: 0.3rem 0.75rem;
+    border-radius: 20px; margin-bottom: 1.5rem;
+}
+.lp-eyebrow-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.lp-headline {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3.25rem; letter-spacing: -0.04em;
+    line-height: 1.08; color: var(--ink);
+    margin-bottom: 1.5rem;
+}
+.lp-headline em { color: var(--accent); font-style: italic; }
+.lp-sub {
+    font-size: 1.0625rem; color: var(--ink-muted);
+    line-height: 1.75; margin-bottom: 2.5rem;
+    max-width: 440px;
+}
+.lp-actions { display: flex; gap: 0.875rem; align-items: center; flex-wrap: wrap; }
+.lp-signin-link { font-size: 0.875rem; color: var(--ink-muted); }
+.lp-signin-link a { color: var(--accent); font-weight: 500; text-decoration: none; }
+.lp-signin-link a:hover { text-decoration: underline; }
+
+/* RIGHT PANEL — mock interface */
+.lp-hero-right {
+    position: relative;
+}
+.lp-mock {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+    overflow: hidden;
+}
+.lp-mock-bar {
+    background: var(--paper-warm);
+    border-bottom: 1px solid var(--border);
+    padding: 0.625rem 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+.mock-body { padding: 1.25rem; }
+.mock-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.9375rem; margin-bottom: 0.25rem; color: var(--ink);
+}
+.mock-meta { display: flex; gap: 0.5rem; margin-bottom: 0.875rem; align-items: center; }
+.mock-soul {
+    font-size: 0.8125rem; color: var(--ink-muted);
+    line-height: 1.6; margin-bottom: 1rem;
+    font-style: italic;
+    padding: 0.75rem 1rem;
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent-muted);
+    border-radius: 0 4px 4px 0;
+}
+.mock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.mock-card {
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.625rem 0.75rem;
+}
+.mock-card-label {
+    font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent-muted); margin-bottom: 0.25rem;
+}
+.mock-card-text { font-size: 0.75rem; color: var(--ink-muted); line-height: 1.5; }
+.mock-score-row {
+    display: flex; align-items: center; gap: 0.5rem; margin-top: 0.875rem;
+}
+.mock-score-bar { height: 4px; flex: 1; background: var(--paper-mid); border-radius: 2px; overflow: hidden; }
+.mock-score-fill { height: 100%; width: 82%; background: var(--accent); border-radius: 2px; }
+.mock-score-label { font-size: 0.7rem; font-family: 'DM Mono', monospace; color: var(--accent); font-weight: 600; }
+
+/* DIVIDER */
+.lp-divider {
+    border: none; border-top: 1px solid var(--border);
+    max-width: 1100px; margin: 0 auto;
+}
+
+/* HOW IT WORKS */
+.lp-how {
+    max-width: 1100px; margin: 0 auto;
+    padding: 4rem 1.5rem;
+}
+.lp-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 2.5rem;
+}
+.lp-steps {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.lp-step {
+    padding: 1.75rem 1.5rem;
+    border-right: 1px solid var(--border);
+    position: relative;
+}
+.lp-step:last-child { border-right: none; }
+.lp-step-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; color: var(--border-strong);
+    letter-spacing: -0.04em; margin-bottom: 0.875rem;
+    line-height: 1;
+}
+.lp-step-title { font-size: 0.9375rem; font-weight: 600; margin-bottom: 0.5rem; }
+.lp-step-desc { font-size: 0.8375rem; color: var(--ink-muted); line-height: 1.6; }
+
+/* SOURCES */
+.lp-sources {
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 1.5rem 4rem;
+    display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;
+}
+.lp-sources-label {
+    font-size: 0.8125rem; color: var(--ink-faint); white-space: nowrap;
+}
+.lp-source-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.lp-source-tag {
+    font-size: 0.8rem; padding: 0.25rem 0.625rem;
+    background: white; border: 1px solid var(--border);
+    border-radius: 4px; color: var(--ink-muted);
+    font-family: 'DM Mono', monospace;
+}
+
+/* FOOTER CTA */
+.lp-footer-cta {
+    background: var(--ink);
+    padding: 4rem 1.5rem;
+    text-align: center;
+}
+.lp-footer-cta-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; color: white;
+    letter-spacing: -0.03em; margin-bottom: 0.75rem;
+}
+.lp-footer-cta-sub {
+    font-size: 0.9375rem; color: rgba(255,255,255,0.55);
+    margin-bottom: 2rem;
+}
+.btn-white {
+    background: white; color: var(--ink);
+    border-color: white;
+}
+.btn-white:hover { background: var(--paper-warm); }
+
+@media (max-width: 768px) {
+    .lp-hero { grid-template-columns: 1fr; padding: 3rem 1.5rem 2rem; }
+    .lp-hero-left { padding-right: 0; margin-bottom: 2.5rem; }
+    .lp-headline { font-size: 2.25rem; }
+    .lp-steps { grid-template-columns: 1fr 1fr; }
+    .lp-step { border-bottom: 1px solid var(--border); }
+    .lp-hero-right { display: none; }
+}
+</style>
+
+<div class="lp-wrap">
+
+    <!-- HERO -->
+    <div class="lp-hero">
+        <div class="lp-hero-left">
+            <div class="lp-eyebrow">
+                <span class="lp-eyebrow-dot"></span>
+                Research Intelligence for PhD Students
+            </div>
+            <h1 class="lp-headline">Stay ahead of<br>the <em>literature,</em><br>every day.</h1>
+            <p class="lp-sub">PhDLens fetches papers from academic databases, reads them with AI, and delivers structured insights — methodology, datasets, results, and thesis-ready summaries — tailored to your exact research topic.</p>
+            <div class="lp-actions">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Start for free</a>
+                <span class="lp-signin-link">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></span>
+            </div>
+        </div>
+
+        <div class="lp-hero-right">
+            <div class="lp-mock">
+                <div class="lp-mock-bar">
+                    <div class="mock-dot" style="background:#e8b4b4;"></div>
+                    <div class="mock-dot" style="background:#e8d9b4;"></div>
+                    <div class="mock-dot" style="background:#b4d9b4;"></div>
+                </div>
+                <div class="mock-body">
+                    <div class="mock-title">VulnLLM: Automated Vulnerability Detection in AI-Generated Code</div>
+                    <div class="mock-meta">
+                        <span class="badge badge-blue" style="font-size:0.7rem;">arXiv</span>
+                        <span style="font-size:0.75rem;color:var(--ink-faint);">2026-03-04</span>
+                    </div>
+                    <div class="mock-soul">
+                        This work proposes a static analysis framework for detecting security vulnerabilities in LLM-generated code, demonstrating that AI-produced code exhibits distinct vulnerability patterns requiring specialised detection methods.
+                    </div>
+                    <div class="mock-grid">
+                        <div class="mock-card">
+                            <div class="mock-card-label">Methodology</div>
+                            <div class="mock-card-text">Static analysis combined with fine-tuned BERT classifier on AST representations.</div>
+                        </div>
+                        <div class="mock-card">
+                            <div class="mock-card-label">Dataset</div>
+                            <div class="mock-card-text">12,400 code samples from GPT-4, Claude, and Copilot across 6 languages.</div>
+                        </div>
+                    </div>
+                    <div class="mock-score-row">
+                        <div style="font-size:0.7rem;color:var(--ink-faint);font-family:'DM Mono',monospace;">Relevance</div>
+                        <div class="mock-score-bar"><div class="mock-score-fill"></div></div>
+                        <div class="mock-score-label">82%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="lp-divider">
+
+    <!-- HOW IT WORKS -->
+    <div class="lp-how">
+        <div class="lp-section-label">How it works</div>
+        <div class="lp-steps">
+            <div class="lp-step">
+                <div class="lp-step-num">01</div>
+                <div class="lp-step-title">Configure your profile</div>
+                <div class="lp-step-desc">Set your main topic, keywords, focus areas, and which databases and blogs to monitor.</div>
+            </div>
+            <div class="lp-step">
+                <div class="lp-step-num">02</div>
+                <div class="lp-step-title">Request a digest</div>
+                <div class="lp-step-desc">On login, request today's digest. PhDLens fetches the latest papers matching your profile.</div>
+            </div>
+            <div class="lp-step">
+                <div class="lp-step-num">03</div>
+                <div class="lp-step-title">AI reads every paper</div>
+                <div class="lp-step-desc">GPT-4o-mini extracts contributions, methodology, datasets, results, and a relevance score.</div>
+            </div>
+            <div class="lp-step">
+                <div class="lp-step-num">04</div>
+                <div class="lp-step-title">Write your thesis</div>
+                <div class="lp-step-desc">Use the detailed view to copy thesis-ready literature review paragraphs directly into your work.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="lp-sources">
+        <span class="lp-sources-label">Monitors</span>
+        <div class="lp-source-tags">
+            <span class="lp-source-tag">arXiv</span>
+            <span class="lp-source-tag">Semantic Scholar</span>
+            <span class="lp-source-tag">PubMed</span>
+            <span class="lp-source-tag">CrossRef</span>
+            <span class="lp-source-tag">OpenAI Blog</span>
+            <span class="lp-source-tag">Google AI</span>
+            <span class="lp-source-tag">DeepMind</span>
+            <span class="lp-source-tag">Anthropic</span>
+        </div>
+    </div>
+
+    <!-- FOOTER CTA -->
+    <div class="lp-footer-cta">
+        <div class="lp-footer-cta-title">Your research, sharper every day.</div>
+        <div class="lp-footer-cta-sub">Built for PhD students who take their literature review seriously.</div>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-white btn-lg">Get started — it's free</a>
+    </div>
+
+</div>
+{% endblock %}
